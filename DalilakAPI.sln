@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32203.90
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DalilakAPI", "DalilakAPI\DalilakAPI.csproj", "{3532DDD2-1D49-4954-B70F-2A55A5CB214B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3532DDD2-1D49-4954-B70F-2A55A5CB214B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3532DDD2-1D49-4954-B70F-2A55A5CB214B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3532DDD2-1D49-4954-B70F-2A55A5CB214B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3532DDD2-1D49-4954-B70F-2A55A5CB214B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ABF24D7B-3EB2-401A-BA98-15BC25C628F2}
+	EndGlobalSection
+EndGlobal
