@@ -21,7 +21,7 @@ namespace DalilakAPI.Controllers
 
         // Insert New Place to database with the JSON Documnets into RavenDB - Setup all setting for one place.
         [HttpPost("Place_")]
-        public bool insertPlace(string name, string location, string description, string place_type, string crowd_status, int likes, int visits, string cityName)
+        public bool insertPlace(string name, string location, string description, string place_type,  string cityName)
         {
             try
             {
@@ -37,12 +37,9 @@ namespace DalilakAPI.Controllers
                         name = name,
                         location = location,
                         description = description,
-                        place_type = place_type,
-                        crowd_status = crowd_status,
+                        place_type = place_type,                       
                         related_doc = related_Docs[1],
                         statstc_doc = related_Docs[0],
-                        totl_likes = likes,
-                        totl_visits = visits,
                         city_id = id
                     };
                     context.Add(place);
@@ -56,6 +53,47 @@ namespace DalilakAPI.Controllers
                 return false;
             }
         }
+        
+        [HttpPost("User_")]
+        public bool insertUser(string name , string phone , string email)
+        {
+            try
+            {
 
+                string userID = Guid.NewGuid().ToString("N");
+                string Jsondoc = _noSqlDatabase.createNewDocforUser(userID);
+
+
+                using (var context=new Database())
+                {
+                    var user = new User
+                    {
+
+                        email = email,
+                        name = name,
+                        phone_num = phone,
+                        id = userID,
+                        record_doc = Jsondoc
+
+
+                    };
+                    context.Add(user);
+                    context.SaveChanges();
+                }
+                return true;
+
+                
+
+               
+
+            }
+
+            catch(Exception ex)
+            {
+                return false;
+
+            }
+
+        }
     }
 }

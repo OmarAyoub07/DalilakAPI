@@ -25,7 +25,7 @@ namespace DalilakAPI.Controllers
         {
             try
             {
-                using (var context = new Classes.Database())
+                using (var context = new Database())
                 {
                     bool isExist = context.Places.Any(item => item.id == id);
                     if (isExist)

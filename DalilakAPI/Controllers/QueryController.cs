@@ -80,7 +80,7 @@ namespace DalilakAPI.Controllers
         {
             try
             {
-                if(admin_id != null)
+                if (admin_id != null)
                 {
                     Admin admin = null;
                     using (var context = new Database())
@@ -120,7 +120,7 @@ namespace DalilakAPI.Controllers
         // http Request to select one elemnt if the client post the place id,
         // and so on select all of the places on specific city if the client set the city id
         [HttpGet("Places_")]
-        public IEnumerable<Place> getPlaces(string palce_id, string city_id)
+        public IEnumerable<Place> getPlaces(string palce_id, string city_id, string NAT, string HIS, string EVE)
         {
             try
             {

@@ -133,7 +133,9 @@ namespace DalilakAPI.Classes
 
         //16cd4400-3398-4480-a096-1b29f7dee3c4
 
-        public Statistics selectStatistics(string id)
+       
+        
+       public Statistics selectStatistics(string id)
         {
             using (session)
             {
@@ -141,5 +143,27 @@ namespace DalilakAPI.Classes
             }
 
         }
+
+
+        public string createNewDocforUser(string userId)
+        {
+            string doc = Guid.NewGuid().ToString("D");
+
+            session.Store(new History { user_id = userId, Id = doc });
+            session.SaveChanges();
+            return doc;
+           
+        }
+        
+
+
+
+
+
+
+        
+
     }
+
+   
 }

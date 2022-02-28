@@ -52,5 +52,48 @@ namespace DalilakAPI.Controllers
                 return false;
             }
         }
+        //Return user id to the client
+        [HttpPost("getUser_")]
+        public string getUser(String number)
+        {
+
+            try
+            {
+                using (var context = new Database()) {
+                    string id = context.Users.Single(item => item.phone_num == "+966"+number).id;
+                    return id;
+                }
+                   
+                    
+            }
+            catch (Exception err)
+            {
+                return err.Message;
+
+            }
+        }
+        //Return user id to client
+        [HttpPost("getEmail_")]
+        public string getEmail(String email)
+        {
+
+            try
+            {
+                using (var context = new Database())
+                {
+                    string id = context.Users.Single(item => item.email == email).id;
+                    return id;
+                }
+
+
+            }
+            catch (Exception err)
+            {
+                return err.Message;
+
+            }
+        }
+
+
     }
 }
