@@ -64,9 +64,19 @@ namespace DalilakAPI.Classes
             session.SaveChanges();
         }
 
-        public void insertComment()
+        public void AddComment(string docID, string userID, string message)
         {
+            
+            var doc = session.Load<Comments>(docID);
 
+            if (!doc.reviewers.Any(usr => usr.user_id == userID))
+                doc.reviewers.Add(new Reviewer { user_id = userID, like = false, reviews = new List<Review>() });
+
+            var reviewer = doc.reviewers.Single(user => user.user_id == userID);
+            DateTime datetime = DateTime.Now;
+            reviewer.reviews.Add(new Review { comment = message, date = datetime.ToString("dd/MMM/yyyy"), time = datetime.ToString("hh:mm") });
+            
+            session.SaveChanges();
         }
 
         public void insertHistory()
@@ -90,12 +100,15 @@ namespace DalilakAPI.Classes
             session.Store(new Statistics
             {
                 Id = doc[0],
-                place_id = placeId
+                place_id = placeId,
+                days = new List<VisitDay>()
             });
             session.Store(new Comments
             {
                 Id = doc[1],
-                place_id = placeId
+                place_id = placeId,
+                images = new string[] {},
+                reviewers = new List<Reviewer>()
             });
 
             session.SaveChanges();

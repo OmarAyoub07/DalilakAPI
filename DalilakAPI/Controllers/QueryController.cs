@@ -18,59 +18,121 @@ namespace DalilakAPI.Controllers
             _logger = logger;
         }
 
-        // Get All Users from database
-        [HttpGet("users_")]
-        public IEnumerable<User> getUsers(string user_id)
+        /* Rest Functions to return data related to users*/
+        [HttpGet("Users_")]
+        public IEnumerable<User> GetUsers()
         {
             try
             {
-                if (user_id != null)
-                {
-                    User user = null;
-                    using (var context = new Database())
-                    {
-                        user = context.Users.Single(item => item.id == user_id);
-                    }
-
-                    return Enumerable.Range(0, 1).Select(index => new User
-                    {
-                        name = user.name,
-                        email = user.email,
-                        age = user.age,
-                        city_id = user.city_id,
-                        phone_num = user.phone_num,
-                        image = user.image,
-                        information = user.information,
-                        user_type = user.user_type,
-                    });
-                }
-
                 List<User> users = new List<User>();
                 int i = 0;
+
                 using (var context = new Database())
                 {
-                    foreach (var item in context.Users)
+                    foreach (var user in context.Users)
                     {
+                        users.Add(user);
                         i++;
-                        users.Add(item);
                     }
                 }
 
-                return Enumerable.Range(0, i).Select(index => new Models.User
+                return Enumerable.Range(0, i).Select(index => new User
                 {
+                    id = users[index].id,
                     name = users[index].name,
                     email = users[index].email,
-                    age = users[index].age,
-                    city_id = users[index].city_id,
                     phone_num = users[index].phone_num,
-                    image = users[index].image,
-                    information = users[index].information,
                     user_type = users[index].user_type,
-                }).ToArray();
+                    city_id = users[index].city_id,
+                    age = users[index].age,
+                    information = users[index].information,
+                });
             }
             catch (Exception err)
             {
                 return Enumerable.Empty<User>();
+            }
+        }
+
+        [HttpGet("User_")]
+        public IEnumerable<User> GetUser(string id)
+        {
+            try
+            {
+                var user = new User();
+
+                using (var context = new Database())
+                {
+                    if (context.Users.Any(user => user.id == id))
+                        user = context.Users.Single(user => user.id == id);
+                }
+
+                return Enumerable.Range(0, 1).Select(index => new User
+                {
+                    id = user.id,
+                    name = user.name,
+                    email = user.email,
+                    phone_num = user.phone_num,
+                    user_type = user.user_type,
+                    city_id = user.city_id,
+                    age = user.age,
+                    information = user.information,
+                });
+            }
+            catch (Exception err)
+            {
+                return Enumerable.Empty<User>();
+            }
+        }
+
+        [HttpGet("ProfileImage_")]
+        public string GetUserImage(string id)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    var user = context.Users.Single(user => user.id == id);
+                    if (user.image != null)
+                    {
+                        string base64String = Convert.ToBase64String(user.image, 0, user.image.Length);
+                        return base64String;
+                    }
+                    return null;
+                }
+            }
+            catch (Exception err)
+            {
+                return null;
+            }
+        }
+
+        /* Rest Functions to retun data related to cities */
+        [HttpGet("Cities_")]
+        public IEnumerable<City> GetCities()
+        {
+            try
+            {
+                List<City> cities = new List<City>();
+                int i = 0;
+
+                using (var context = new Database())
+                {
+                    foreach (var city in context.Cities)
+                    {
+                        cities.Add(city);
+                        i++;
+                    }
+                }
+                return Enumerable.Range(0, i).Select(index => new City
+                {
+                    id = cities[index].id,
+                    name = cities[index].name,
+                });
+            }
+            catch (Exception err)
+            {
+                return Enumerable.Empty<City>();
             }
         }
 

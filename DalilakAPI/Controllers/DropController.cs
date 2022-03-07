@@ -20,7 +20,7 @@ namespace DalilakAPI.Controllers
         }
 
         // Delete one place from database with deleting attached JSON Documents from RavenDB 
-        [HttpDelete("Place_")]
+        [HttpPost("Place_")]
         public bool dropPlace(string id)
         {
             try
@@ -42,6 +42,29 @@ namespace DalilakAPI.Controllers
             catch (Exception err)
             {
                 Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        [HttpPost("User_")]
+        public bool DropUser(string id)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if (context.Users.Any(user => user.id == id))
+                    {
+                        var user = context.Users.Single(user => user.id == id);
+                        _noSqlDatabase.deleteDoc(user.record_doc);
+                        context.Remove(user);
+                        context.SaveChanges();
+                    }
+                }
+                return true;
+            }
+            catch
+            {
                 return false;
             }
         }
