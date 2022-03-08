@@ -5,7 +5,7 @@ namespace DalilakAPI.Models
     public class Comments
     {
         public string place_id { get; set; }
-        public string[] images { get; set; }
+        public List<string> images { get; set; }
         public List<Reviewer> reviewers { get; set; }
         public string Id { get; set; }
 

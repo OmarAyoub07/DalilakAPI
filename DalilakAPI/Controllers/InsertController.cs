@@ -55,6 +55,7 @@ namespace DalilakAPI.Controllers
             }
         }
 
+        // Comment in specific place
         [HttpPost("Comment_")]
         public bool InsertComment(string place_id, string user_id, string message)
         {
@@ -78,6 +79,35 @@ namespace DalilakAPI.Controllers
                 return false;
             }
         }
+
+        // Image to specific Plage
+        [HttpPost("PlaceImage_")]
+        public bool InsertImage(string place_id, string img)
+        {
+            // img example:
+            //*byte[] image = System.IO.File.ReadAllBytes("Assets/Images/maxresdefault.jpg");
+            //*string base64String = Convert.ToBase64String(image, 0, image.Length);
+            //*img = "data:image/jpg;base64," + base64String;
+
+            try
+            {
+                using (var context = new Database())
+                {
+                    if(context.Places.Any(place => place.id == place_id))
+                    {
+                        var doc = context.Places.Single(place => place.id == place_id).related_doc;
+                        _noSqlDatabase.AddImage(doc, img);
+                    }
+                }
+                    return true;
+            }
+            catch (Exception err)
+            {
+                return false;
+            }
+        }
+
+
         
         /* function to insert data related to users */
         [HttpPost("NewUser_")]

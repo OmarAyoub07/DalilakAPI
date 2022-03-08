@@ -64,6 +64,10 @@ namespace DalilakAPI.Classes
             session.SaveChanges();
         }
 
+
+        /* Functions to add data to documnets related to specific place */
+
+        // - Add Comment to documnet
         public void AddComment(string docID, string userID, string message)
         {
             
@@ -77,6 +81,41 @@ namespace DalilakAPI.Classes
             reviewer.reviews.Add(new Review { comment = message, date = datetime.ToString("dd/MMM/yyyy"), time = datetime.ToString("hh:mm") });
             
             session.SaveChanges();
+        }
+
+        // - Get all comments
+        public List<Reviewer> GetComments(string docID)
+        {
+            var doc = session.Load<Comments>(docID);
+
+            return doc.reviewers;
+        }
+
+        // - Add Image to document
+        public void AddImage(string docID, string img)
+        {
+            // Load the Json Document form RavenDB
+            var doc = session.Load<Comments>(docID);
+
+            doc.images.Add(img);
+
+            session.SaveChanges();
+            
+        }
+
+        // - Get One random Image
+        public string GetImage_Random(string docID)
+        {
+            var doc = session.Load<Comments>(docID);
+            Random rn = new Random();
+            return doc.images[rn.Next(0, doc.images.Count())];
+        }
+
+        // - Get all Images
+        public List<string> GetImages(string docID)
+        {
+            var doc = session.Load<Comments>(docID);
+            return doc.images;
         }
 
         public void insertHistory()
@@ -107,7 +146,7 @@ namespace DalilakAPI.Classes
             {
                 Id = doc[1],
                 place_id = placeId,
-                images = new string[] {},
+                images = new List<string>(),
                 reviewers = new List<Reviewer>()
             });
 

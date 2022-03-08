@@ -13,6 +13,8 @@ namespace DalilakAPI.Controllers
     public class QueryController : ControllerBase
     {
         private readonly ILogger<QueryController> _logger;
+        private NoSqlDatabase _noSqlDatabase = new NoSqlDatabase();
+
         public QueryController(ILogger<QueryController> logger)
         {
             _logger = logger;
@@ -106,6 +108,145 @@ namespace DalilakAPI.Controllers
                 return null;
             }
         }
+        /* End of users functions */
+
+
+
+
+        /* Function that deal with places */
+
+        [HttpGet("Places_")]
+        public IEnumerable<Place> GetPlaces(string city_id, string place_type)
+        {
+            try
+            {
+
+                // 2- Select Many places within specific city
+                int i = 0;
+                List<Place> places = new List<Place>();
+                using (var context = new Classes.Database())
+                {
+                    foreach (var item in context.Places)
+                    {
+                        if (item.city_id == city_id && item.place_type == place_type)
+                        {
+                            i++;
+                            places.Add(item);
+                        }
+                    }
+                }
+                return Enumerable.Range(0, i).Select(Index => new Place
+                {
+                    id = places[Index].id,
+                    name = places[Index].name
+
+                }).ToArray();
+
+            }
+            catch (Exception err)
+            {
+                // error, noway to get the error except if the client doesn't define values for the parameters
+                return Enumerable.Range(0, 1).Select(Index => new Place
+                {
+                    name = err.Message,
+                    description = "you must set a value for place or city..."
+                }).ToArray();
+            }
+
+
+        }
+
+        [HttpGet("Place_")]
+        public IEnumerable<Place> GetPlace(string palce_id)
+        {
+            try
+            {
+                // Select one place
+                Place place = null;
+                using (var context = new Database())
+                {
+                    place = context.Places.Single(item => item.id == palce_id);
+                }
+
+                // return will cuase ignoring to remaining code...
+                return Enumerable.Range(0, 1).Select(Index => new Place
+                {
+                    name = place.name,
+                    location = place.location,
+                    totl_likes = place.totl_likes,
+                    totl_visits = place.totl_visits,
+                    crowd_status = place.crowd_status,
+                    description = place.description,
+
+                }).ToArray();
+
+            }
+            catch (Exception err)
+            {
+                // error, noway to get the error except if the client doesn't define values for the parameters
+                return Enumerable.Range(0, 1).Select(Index => new Place
+                {
+                    name = err.Message,
+                    description = "you must set a value for place or city..."
+                }).ToArray();
+            }
+        }
+
+        [HttpGet("PlaceImage_")]
+        public string GetPlaceImage(string place_id)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if(context.Places.Any(place => place.id == place_id))
+                    {
+                        string doc = context.Places.Single(place => place.id == place_id).related_doc;
+                        return _noSqlDatabase.GetImage_Random(doc);
+                    }
+                }
+                    return "No place with this ID";
+            }
+            catch (Exception err)
+            {
+                return err.Message;
+            }
+        }
+
+        [HttpGet("PlaceComments_")]
+        public IEnumerable<Reviewer> GetComments(string place_id)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if(context.Places.Any(place => place.id == place_id))
+                    {
+                        var reviewers = _noSqlDatabase.GetComments(context.Places.Single(place => place.id == place_id).related_doc);
+                        int i = 0;
+                        foreach(var item in reviewers)
+                        {
+                            item.user_id = context.Users.Single(user => user.id == item.user_id).name;
+                            i++;
+                        }
+                        return Enumerable.Range(0, i).Select(Index => new Reviewer
+                        {
+                            user_id = reviewers[Index].user_id,
+                            reviews = reviewers[Index].reviews
+                        }).ToArray();
+                    }
+
+                }
+
+                return Enumerable.Empty<Reviewer>();
+            }
+            catch (Exception err)
+            {
+                return Enumerable.Empty<Reviewer>();
+            }
+        }
+
+
 
         /* Rest Functions to retun data related to cities */
         [HttpGet("Cities_")]
@@ -138,7 +279,7 @@ namespace DalilakAPI.Controllers
 
         // Get All rows from Admin Table at database
         [HttpGet("admin_")]
-        public IEnumerable<Admin> getAdmins(string admin_id)
+        public IEnumerable<Admin> GetAdmins(string admin_id)
         {
             try
             {
@@ -179,74 +320,5 @@ namespace DalilakAPI.Controllers
             }
         }
 
-        // http Request to select one elemnt if the client post the place id,
-        // and so on select all of the places on specific city if the client set the city id
-        [HttpGet("Places_")]
-        public IEnumerable<Place> getPlaces(string palce_id, string city_id, string NAT, string HIS, string EVE)
-        {
-            try
-            {
-                if (palce_id != null)
-                {
-                    // 1- Select one place
-                    Place place = null;
-                    using (var context = new Classes.Database())
-                    {
-                        place = context.Places.Single(item => item.id == palce_id || item.city_id == city_id);
-                    }
-
-                    // return will cuase ignoring to remaining code...
-                    return Enumerable.Range(0, 1).Select(Index => new Place
-                    {
-                        name = place.name,
-                        location = place.location,
-                        place_type = place.place_type,
-                        totl_likes = place.totl_likes,
-                        totl_visits = place.totl_visits,
-                        crowd_status = place.crowd_status,
-                        description = place.description,
-
-                    }).ToArray();
-                }
-
-                // 2- Select Many places within specific city
-                int i = 0;
-                List<Place> places = new List<Place>();
-                using (var context = new Classes.Database())
-                {
-                    foreach (var item in context.Places)
-                    {
-                        if (item.city_id == city_id)
-                        {
-                            i++;
-                            places.Add(item);
-                        }
-                    }
-                }
-                return Enumerable.Range(0, i).Select(Index => new Place
-                {
-                    name = places[Index].name,
-                    location = places[Index].location,
-                    place_type = places[Index].place_type,
-                    totl_likes = places[Index].totl_likes,
-                    totl_visits = places[Index].totl_visits,
-                    crowd_status = places[Index].crowd_status,
-                    description = places[Index].description,
-
-                }).ToArray();
-
-            }
-            catch (Exception err)
-            {
-                // error, noway to get the error except if the client doesn't define values for the parameters
-                return Enumerable.Range(0, 1).Select(Index => new Place
-                {
-                    name = err.Message,
-                    description = "you must set a value for place or city..."
-                }).ToArray();
-            }
-
-
-        }
     }
 }

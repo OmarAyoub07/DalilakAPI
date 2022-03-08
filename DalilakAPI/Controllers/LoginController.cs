@@ -35,65 +35,28 @@ namespace DalilakAPI.Controllers
             }
         }
 
+
         [HttpPost("user_")]
-        public bool loginToApp(string phone)
+        public string loginToApp(string phone)
         {
             try
             {
                 phone = "+966"+phone;
                 using (var context = new Database())
                 {
-                    bool user = context.Users.Any(item => item.phone_num == phone);
-                    return user;
+                    if (context.Users.Any(item => item.phone_num == phone))
+                    {
+                        var user = context.Users.Single(item => item.phone_num == phone).id;
+                        return user;
+                    }
+                    return "notExist";
                 }
             }
             catch (Exception err)
             {
-                return false;
+                return null;
             }
         }
-        //Return user id to the client
-        [HttpPost("getUser_")]
-        public string getUser(String number)
-        {
-
-            try
-            {
-                using (var context = new Database()) {
-                    string id = context.Users.Single(item => item.phone_num == "+966"+number).id;
-                    return id;
-                }
-                   
-                    
-            }
-            catch (Exception err)
-            {
-                return err.Message;
-
-            }
-        }
-        //Return user id to client
-        [HttpPost("getEmail_")]
-        public string getEmail(String email)
-        {
-
-            try
-            {
-                using (var context = new Database())
-                {
-                    string id = context.Users.Single(item => item.email == email).id;
-                    return id;
-                }
-
-
-            }
-            catch (Exception err)
-            {
-                return err.Message;
-
-            }
-        }
-
 
     }
 }
