@@ -103,6 +103,52 @@ namespace DalilakAPI.Controllers
             }
             catch (Exception err)
             {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        [HttpPost("Visit_")]
+        public bool InsertVisit(string place_id, string date ,string time, int visitors_Num)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if (context.Places.Any(place => place.id == place_id)) 
+                    {
+                        var doc_id = context.Places.Single(place => place.id == place_id).statstc_doc;
+                        _noSqlDatabase.AddVisits(doc_id, date, time, visitors_Num);
+                    }
+                }
+                    return true;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        // Insert Rate or  for a place from specific user
+        [HttpPost("Rate_")]
+        public bool InsertRate(string user_id, string place_id, int rate, bool favorit)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if(context.Users.Any(user => user.id == user_id) && context.Places.Any(place => place.id == place_id))
+                    {
+                        var doc = context.Users.Single(user => user.id == user_id).record_doc;
+                        _noSqlDatabase.AddRate(doc, place_id, rate, favorit);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            catch (Exception err)
+            {
                 return false;
             }
         }
@@ -136,15 +182,16 @@ namespace DalilakAPI.Controllers
                 }
                 return true;
             }
-            catch(Exception ex)
+            catch(Exception err)
             {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
                 return false;
             }
 
         }
 
         [HttpPost("UpdateUser_")]
-        public bool UpdateUser(string id, string email, string phone, string name, int age, bool userType)
+        public bool UpdateUser(string id, string email, string phone, string name, int age, bool userType, string info, string cityName)
         {
             try
             {
@@ -160,8 +207,27 @@ namespace DalilakAPI.Controllers
                         if(phone != null)
                             user.phone_num = "+966"+phone;
 
+                        if(name != null)
+                            user.name = name;
+
+                        if(age != 0)
+                            user.age = age;
+
                         if(userType != user.user_type)
                             user.user_type = userType;
+
+                        if(info != null)
+                            user.information = info;
+
+                        if(cityName != null)
+                        {
+                            if (context.Cities.Any(item => item.name == cityName))
+                            {
+                                string Cityid = context.Cities.Single(item => item.name == cityName).id;
+                                user.city_id = Cityid;
+                            }                               
+                        }
+
                         context.SaveChanges();
                     }
                 }

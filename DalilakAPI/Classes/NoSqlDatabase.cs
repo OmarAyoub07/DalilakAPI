@@ -83,6 +83,40 @@ namespace DalilakAPI.Classes
             session.SaveChanges();
         }
 
+        // Add Rate to Document
+        public void AddRate(string docID, string placeID, int rate, bool favorit)
+        {
+            var doc = session.Load<History>(docID);
+
+            if (!doc.records.Any(plc => plc.place_id == placeID))
+                doc.records.Add(new Record { place_id = placeID, favorite = favorit, rate = rate});
+            else
+            {
+                var record = doc.records.Single(plc => plc.place_id == placeID);
+                record.rate = rate != 0 ? rate : record.rate;
+                record.favorite = favorit != record.favorite ? favorit : record.favorite;
+            }
+            session.SaveChanges();
+        }
+
+        // Increase Statistics for place
+        public void AddVisits(string docID, string date, string time, int visistsNum)
+        {
+            var doc = session.Load<Statistics>(docID);
+
+            if (!doc.days.Any(day => day.date == date))
+                doc.days.Add(new VisitDay { date = date, hours = new List<VisitTime>() });
+
+            var day = doc.days.Single(day => day.date == date);
+
+            if (!day.hours.Any(hour => hour.time == time))
+                day.hours.Add(new VisitTime { time = time, visits_num = visistsNum });
+            else
+                day.hours.Single(hour => hour.time == time).visits_num += visistsNum ;
+
+            session.SaveChanges();
+        }
+
         // - Get all comments
         public List<Reviewer> GetComments(string docID)
         {
@@ -201,7 +235,7 @@ namespace DalilakAPI.Classes
         {
             string doc = Guid.NewGuid().ToString("D");
 
-            session.Store(new History { user_id = userId, Id = doc });
+            session.Store(new History { user_id = userId, Id = doc, records = new List<Record>() });
             session.SaveChanges();
             return doc;
            
