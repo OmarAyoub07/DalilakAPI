@@ -246,6 +246,20 @@ namespace DalilakAPI.Controllers
             }
         }
 
+        [HttpGet("LR_DataSet_")]
+        public IEnumerable<DataSet.LinearRegression> GetDataSet_LR()
+        {
+            var dataset = _noSqlDatabase.Get_LR_DataSet();
+            return dataset;
+        }
+
+        [HttpGet("MF_DataSet_")]
+        public IEnumerable<DataSet.MatrixFactorization> GetDataSet_MF()
+        {
+            var dataset = _noSqlDatabase.Get_MF_DataSet();
+            return dataset;
+        }
+
 
 
         /* Rest Functions to retun data related to cities */

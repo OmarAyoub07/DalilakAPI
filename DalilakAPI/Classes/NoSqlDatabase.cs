@@ -117,6 +117,20 @@ namespace DalilakAPI.Classes
             session.SaveChanges();
         }
 
+        // - Get DataSet
+        public List<DataSet.LinearRegression> Get_LR_DataSet()
+        {
+            var dataset = session.Query<DataSet.LinearRegression>("LinearRegression_DataSet").ToList();
+
+            return dataset;
+        }
+        public List<DataSet.MatrixFactorization> Get_MF_DataSet()
+        {
+            var dataset = session.Query<DataSet.MatrixFactorization>("MatrixFactorization_DataSet").ToList();
+
+            return dataset;
+        }
+
         // - Get all comments
         public List<Reviewer> GetComments(string docID)
         {
@@ -242,14 +256,8 @@ namespace DalilakAPI.Classes
         }
         
 
-
-
-
-
-
-        
-
     }
+
 
    
 }
