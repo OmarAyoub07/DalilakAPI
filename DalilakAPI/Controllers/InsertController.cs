@@ -14,6 +14,7 @@ namespace DalilakAPI.Controllers
     {
         private readonly ILogger<InsertController> _logger;
         private NoSqlDatabase _noSqlDatabase = new NoSqlDatabase();
+        private StoreImages _storeImages = new StoreImages();
 
         public InsertController(ILogger<InsertController> logger)
         {
@@ -82,13 +83,14 @@ namespace DalilakAPI.Controllers
 
         // Image to specific Plage
         [HttpPost("PlaceImage_")]
-        public bool InsertImage(string place_id, string img)
+        public bool InsertImage(string user_id ,string place_id)
         {
             // img example:
             //*byte[] image = System.IO.File.ReadAllBytes("Assets/Images/maxresdefault.jpg");
             //*string base64String = Convert.ToBase64String(image, 0, image.Length);
             //*img = "data:image/jpg;base64," + base64String;
-
+            string img = _storeImages.GetImage(user_id).Replace(" ","+");
+            _storeImages.RemoveItem(user_id);
             try
             {
                 using (var context = new Database())
@@ -167,6 +169,8 @@ namespace DalilakAPI.Controllers
 
                 using (var context=new Database())
                 {
+                    if (context.Users.Any(user => user.email == email || user.phone_num == phone))
+                        return false;
                     var user = new User
                     {
 

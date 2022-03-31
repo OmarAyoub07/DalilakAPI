@@ -108,6 +108,38 @@ namespace DalilakAPI.Controllers
                 return null;
             }
         }
+
+        [HttpGet("UserHistory_")]
+        public IEnumerable<History> GetUserHistory(string id)
+        {
+            using (var context = new Database())
+            {
+                try
+                {
+
+
+                    if (context.Users.Any(user => user.id == id))
+                    {
+                        History history = _noSqlDatabase.GetHistory(context.Users.Single(user => user.id == id).record_doc);
+                        foreach (var item in history.records)
+                        {
+                            var place = context.Places.Single(place => place.id == item.place_id);
+                            item.place_id = place.name;
+                        }
+                        return Enumerable.Range(0, 1).Select(index => new History
+                        {
+                            records = history.records,
+                        });
+                    }
+                    return Enumerable.Empty<History>();
+
+                }
+                catch (Exception err)
+                {
+                    return Enumerable.Empty<History>();
+                }
+            }
+        }
         /* End of users functions */
 
 

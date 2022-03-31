@@ -231,6 +231,11 @@ namespace DalilakAPI.Classes
             }
         }
 
+        public History GetHistory(string docId)
+        {
+            var doc = session.Load<History>(docId);
+            return doc;
+        }
         //16cd4400-3398-4480-a096-1b29f7dee3c4
 
        
