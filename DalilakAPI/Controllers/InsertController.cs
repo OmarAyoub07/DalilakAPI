@@ -5,6 +5,8 @@ using DalilakAPI.Models;
 using System.Linq;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Web;
 
 namespace DalilakAPI.Controllers
 {
@@ -14,7 +16,7 @@ namespace DalilakAPI.Controllers
     {
         private readonly ILogger<InsertController> _logger;
         private NoSqlDatabase _noSqlDatabase = new NoSqlDatabase();
-        private StoreImages _storeImages = new StoreImages();
+        private static List<string[]> base64ArrString = new List<string[]>();
 
         public InsertController(ILogger<InsertController> logger)
         {
@@ -83,28 +85,39 @@ namespace DalilakAPI.Controllers
 
         // Image to specific Plage
         [HttpPost("PlaceImage_")]
-        public bool InsertImage(string user_id ,string place_id)
+        public bool InsertImage(string place_id, string user_id, string packet_order, string packet_str64, bool isReady)
         {
             // img example:
             //*byte[] image = System.IO.File.ReadAllBytes("Assets/Images/maxresdefault.jpg");
-            //*string base64String = Convert.ToBase64String(image, 0, image.Length);
-            //*img = "data:image/jpg;base64," + base64String;
-            string img = _storeImages.GetImage(user_id).Replace(" ","+");
-            _storeImages.RemoveItem(user_id);
+            //img = "data:image/jpg;base64," + base64String;
+
             try
             {
-                using (var context = new Database())
+                if (!isReady)
                 {
-                    if(context.Places.Any(place => place.id == place_id))
-                    {
-                        var doc = context.Places.Single(place => place.id == place_id).related_doc;
-                        _noSqlDatabase.AddImage(doc, img);
-                    }
-                }
+                    AddPacket(user_id, packet_order, packet_str64);
+
                     return true;
+                }
+                else if (isReady)
+                {
+                    string base64String = CollectPackets(user_id);
+                    using (var context = new Database())
+                    {
+                        if (context.Places.Any(place => place.id == place_id))
+                        {
+                            var doc = context.Places.Single(place => place.id == place_id).related_doc;
+                            _noSqlDatabase.AddImage(doc, base64String); 
+                        }
+                    }
+                    RemovePackets(user_id);
+                    return true;
+                }
+                return false;
             }
             catch (Exception err)
             {
+                RemovePackets(user_id);
                 Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
                 return false;
             }
@@ -171,6 +184,7 @@ namespace DalilakAPI.Controllers
                 {
                     if (context.Users.Any(user => user.email == email || user.phone_num == phone))
                         return false;
+                    var bytes = System.IO.File.ReadAllBytes("Assets/Images/traveler.png");
                     var user = new User
                     {
 
@@ -179,8 +193,8 @@ namespace DalilakAPI.Controllers
                         phone_num = "+966"+phone,
                         id = userID,
                         record_doc = Jsondoc,
-                        image = System.IO.File.ReadAllBytes("Assets/Images/traveler.png")
-                };
+                        image = Convert.ToBase64String(bytes, 0, bytes.Length)
+                    };
                     context.Add(user);
                     context.SaveChanges();
                 }
@@ -240,6 +254,79 @@ namespace DalilakAPI.Controllers
             catch (Exception err)
             {
                 return false ;
+            }
+        }
+
+        [HttpPost("UpdateProfile_")]
+        public bool UpdateProfile(string user_id, string packet_order, string packet_str64, bool isReady)
+        {
+            try
+            {
+                if (!isReady)
+                {
+                    AddPacket(user_id, packet_order, packet_str64);
+                    return true;
+                }
+                else if (isReady)
+                {
+                    string base64String = CollectPackets(user_id);
+                    using (var context = new Database())
+                    {
+                        if (context.Users.Any(user => user.id == user_id))
+                        {
+                            context.Users.Single(user => user.id == user_id).image = base64String;
+                            context.SaveChanges();
+                        }
+                    }
+
+                    RemovePackets(user_id);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+
+        private void AddPacket(string id, string order,string packet)
+        {
+            packet = packet.Replace(" ", "+");
+            base64ArrString.Add(new string[] { id, order, packet });
+        }
+
+        private string CollectPackets(string id)
+        {
+            string base64String = "";
+
+            // Sort and get Length
+            int packetsCount = 0;
+            for (int i = 0; i < base64ArrString.Count(); i++)
+            {
+                // 1 is temp ID
+                string[] temp = base64ArrString[i];
+                if (base64ArrString.Select(row => row[0] == id).Count() == packetsCount)
+                    break;
+                if (temp[0] == id && int.Parse(temp[1]) == packetsCount)
+                {
+                    base64String += temp[2];
+                    packetsCount++;
+                }
+            }
+
+            return base64String;
+        } 
+
+        private void RemovePackets(string id)
+        {
+            for (int i = 0; i < base64ArrString.Count(); i++)
+            {
+                var item = base64ArrString[i];
+                if (item[0] == id)
+                    base64ArrString.RemoveAt(base64ArrString.IndexOf(item));
             }
         }
 

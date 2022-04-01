@@ -22,7 +22,7 @@ namespace DalilakAPI.Models
         public string name { get; set; }
         public bool user_type { get; set; }
         public int age { get; set; }
-        public byte[] image { get; set; }
+        public string image { get; set; }
         public string information { get; set; }
         public string record_doc { get; set; }
 
