@@ -97,7 +97,7 @@ namespace DalilakAPI.Controllers
                     var user = context.Users.Single(user => user.id == id);
                     if (user.image != null)
                     {
-                        return user.image;
+                        return Convert.ToBase64String(user.image);
                     }
                     return null;
                 }

@@ -16,7 +16,6 @@ namespace DalilakAPI.Controllers
     {
         private readonly ILogger<InsertController> _logger;
         private NoSqlDatabase _noSqlDatabase = new NoSqlDatabase();
-        private static List<string[]> base64ArrString = new List<string[]>();
 
         public InsertController(ILogger<InsertController> logger)
         {
@@ -85,7 +84,7 @@ namespace DalilakAPI.Controllers
 
         // Image to specific Plage
         [HttpPost("PlaceImage_")]
-        public bool InsertImage(string place_id, string user_id, string packet_order, string packet_str64, bool isReady)
+        public bool InsertImage(string place_id, string[] base64String )
         {
             // img example:
             //*byte[] image = System.IO.File.ReadAllBytes("Assets/Images/maxresdefault.jpg");
@@ -93,31 +92,18 @@ namespace DalilakAPI.Controllers
 
             try
             {
-                if (!isReady)
+                using (var context = new Database())
                 {
-                    AddPacket(user_id, packet_order, packet_str64);
-
-                    return true;
-                }
-                else if (isReady)
-                {
-                    string base64String = CollectPackets(user_id);
-                    using (var context = new Database())
+                    if (context.Places.Any(place => place.id == place_id))
                     {
-                        if (context.Places.Any(place => place.id == place_id))
-                        {
-                            var doc = context.Places.Single(place => place.id == place_id).related_doc;
-                            _noSqlDatabase.AddImage(doc, base64String); 
-                        }
+                        var doc = context.Places.Single(place => place.id == place_id).related_doc;
+                        _noSqlDatabase.AddImage(doc, base64String[0]); 
                     }
-                    RemovePackets(user_id);
-                    return true;
                 }
-                return false;
+                return true;
             }
             catch (Exception err)
             {
-                RemovePackets(user_id);
                 Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
                 return false;
             }
@@ -184,7 +170,6 @@ namespace DalilakAPI.Controllers
                 {
                     if (context.Users.Any(user => user.email == email || user.phone_num == phone))
                         return false;
-                    var bytes = System.IO.File.ReadAllBytes("Assets/Images/traveler.png");
                     var user = new User
                     {
 
@@ -193,8 +178,8 @@ namespace DalilakAPI.Controllers
                         phone_num = "+966"+phone,
                         id = userID,
                         record_doc = Jsondoc,
-                        image = Convert.ToBase64String(bytes, 0, bytes.Length)
-                    };
+                        image = System.IO.File.ReadAllBytes("Assets/Images/traveler.png")
+                };
                     context.Add(user);
                     context.SaveChanges();
                 }
@@ -258,31 +243,20 @@ namespace DalilakAPI.Controllers
         }
 
         [HttpPost("UpdateProfile_")]
-        public bool UpdateProfile(string user_id, string packet_order, string packet_str64, bool isReady)
+        public bool UpdateProfile(string user_id, byte[] img)
         {
             try
             {
-                if (!isReady)
+                using (var context = new Database())
                 {
-                    AddPacket(user_id, packet_order, packet_str64);
-                    return true;
-                }
-                else if (isReady)
-                {
-                    string base64String = CollectPackets(user_id);
-                    using (var context = new Database())
+                    if (context.Users.Any(user => user.id == user_id))
                     {
-                        if (context.Users.Any(user => user.id == user_id))
-                        {
-                            context.Users.Single(user => user.id == user_id).image = base64String;
-                            context.SaveChanges();
-                        }
+                        context.Users.Single(user => user.id == user_id).image = img;
+                        context.SaveChanges();
                     }
-
-                    RemovePackets(user_id);
-                    return true;
                 }
-                return false;
+                return true;
+                
             }
             catch (Exception err)
             {
@@ -292,44 +266,29 @@ namespace DalilakAPI.Controllers
         }
 
 
-        private void AddPacket(string id, string order,string packet)
+        /* Insert Image for City */
+        public bool InsertAds(string admin_id, string city_id, byte[] image)
         {
-            packet = packet.Replace(" ", "+");
-            base64ArrString.Add(new string[] { id, order, packet });
-        }
-
-        private string CollectPackets(string id)
-        {
-            string base64String = "";
-
-            // Sort and get Length
-            int packetsCount = 0;
-            for (int i = 0; i < base64ArrString.Count(); i++)
+            try
             {
-                // 1 is temp ID
-                string[] temp = base64ArrString[i];
-                if (base64ArrString.Select(row => row[0] == id).Count() == packetsCount)
-                    break;
-                if (temp[0] == id && int.Parse(temp[1]) == packetsCount)
+                using (var context = new Database())
                 {
-                    base64String += temp[2];
-                    packetsCount++;
+                    var ad = new Ad()
+                    {
+                        admin_id = admin_id,
+                        city_id = city_id,
+                        ad_image = image
+                    };
+                    context.Add(ad);
+                    context.SaveChanges();
                 }
+                return true;
             }
-
-            return base64String;
-        } 
-
-        private void RemovePackets(string id)
-        {
-            for (int i = 0; i < base64ArrString.Count(); i++)
+            catch(Exception err)
             {
-                var item = base64ArrString[i];
-                if (item[0] == id)
-                    base64ArrString.RemoveAt(base64ArrString.IndexOf(item));
+                return false;
             }
         }
-
 
     }
 }
