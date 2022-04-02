@@ -267,6 +267,7 @@ namespace DalilakAPI.Controllers
 
 
         /* Insert Image for City */
+        [HttpPost("Ads_")]
         public bool InsertAds(string admin_id, string city_id, byte[] image)
         {
             try
