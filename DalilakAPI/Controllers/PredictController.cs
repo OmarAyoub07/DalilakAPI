@@ -127,6 +127,8 @@ namespace DalilakAPI.Controllers
                             var rate = MF_predictionEngin.Predict(recomSample).Score;
                             if (rate > 0.55)
                                 totl_recom++;
+                            else if(float.IsNaN(rate))
+                                totl_cantPredict++;
                             else
                                 totl_notRecom++;
                         }
