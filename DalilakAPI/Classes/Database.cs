@@ -18,14 +18,6 @@ namespace DalilakAPI.Classes
         public DbSet<Modification> Modifications { get; set; }
         public DbSet<Ad> Ads { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Schedule>().HasNoKey();
-            modelBuilder.Entity<Request>().HasNoKey();
-            modelBuilder.Entity<Modification>().HasNoKey();
-            modelBuilder.Entity<Ad>().HasNoKey();
-        }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySQL("Server = n1nlmysql23plsk.secureserver.net; Port = 3306; Database = Dalilak_DB; Uid = CP_TU; Pwd = nc3V2x@8;");

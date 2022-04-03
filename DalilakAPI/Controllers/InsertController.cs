@@ -276,6 +276,7 @@ namespace DalilakAPI.Controllers
                 {
                     var ad = new Ad()
                     {
+                        id = default(int),
                         admin_id = admin_id,
                         city_id = city_id,
                         ad_image = image
@@ -287,6 +288,7 @@ namespace DalilakAPI.Controllers
             }
             catch(Exception err)
             {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
                 return false;
             }
         }

@@ -61,6 +61,8 @@ namespace DalilakAPI.Models
 
     public class Schedule
     {
+        [Key]
+        public int id { get; set; }
         public string Doc_id { get; set; }
 
         [ForeignKey("FK_User_Trips")]
@@ -69,6 +71,9 @@ namespace DalilakAPI.Models
 
     public class Request
     {
+        [Key]
+        public int id { get; set; }
+
         [ForeignKey("FK_admin_Response")]
         public string admin_id { get; set; }
 
@@ -81,16 +86,23 @@ namespace DalilakAPI.Models
 
     public class Modification
     {
+        [Key]
+        public int id { get; set; }
+
         [ForeignKey("FK_admin_Confirm")]
         public string admin_id { get; set; }
 
         [ForeignKey("FK_user_Modify")]
         public string user_id { get; set; }
         public string operation { get; set; }
+        public byte[] file { get; set; }
     }
 
     public class Ad
     {
+        [Key]
+        public int id { get; set; }
+
         [ForeignKey("FK_Admin_Control")]
         public string admin_id { get; set; }
 
