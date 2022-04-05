@@ -24,7 +24,7 @@ namespace DalilakAPI.Controllers
 
         // Insert New Place to database with the JSON Documnets into RavenDB - Setup all setting for one place.
         [HttpPost("Place_")]
-        public bool insertPlace(string name, string location, string description, string place_type,  string cityName)
+        public string insertPlace(string name, string location, string description, string place_type,  string cityName)
         {
             try
             {
@@ -48,7 +48,46 @@ namespace DalilakAPI.Controllers
                     context.Add(place);
                     context.SaveChanges();
                 }
-                return true;
+                return place_id;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return null;
+            }
+        }
+
+        [HttpPost("UpdatePlace")]
+        public bool UpdatePlace(string id, string name, string location, string des, string place_type, string CityName)
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    if(context.Places.Any(plc => plc.id == id))
+                    {
+                        var place = context.Places.Single(plc => plc.id == id);
+                        if(name != null)
+                            place.name = name;
+                        if(location != null)
+                            place.location = location;
+                        if(des != null)
+                            place.description = des;
+                        if(place_type != null)
+                            place.place_type = place_type;
+                        if (CityName != null)
+                        {
+                            if (context.Cities.Any(item => item.name == CityName))
+                            {
+                                string Cityid = context.Cities.Single(item => item.name == CityName).id;
+                                place.city_id = Cityid;
+                            }
+                        }
+                        context.SaveChanges();
+                        return true;
+                    }
+                    return false;
+                }
             }
             catch (Exception err)
             {
@@ -289,6 +328,146 @@ namespace DalilakAPI.Controllers
             catch(Exception err)
             {
                 Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        /* Insert New Request */
+        [HttpPost("Request_")]
+        public bool InsertRequest(string user_id, byte[] file)
+        {
+            try
+            {
+                //byte[] file = System.IO.File.ReadAllBytes("Assets/PDF/Test.pdf");
+                using (var context = new Database())
+                {
+                    var req = new Request()
+                    {
+                        id = default(int), 
+                        admin_id="",
+                        user_id=user_id,
+                        file=file,
+                        req_status=0
+                    };
+                    context.Add(req);
+                    context.SaveChanges();
+                }
+                    return true;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        [HttpPost("UpdateRequest_")]
+        public bool UpdateRequest(string[] content)
+        {
+                // Content = new string[] {id, adminEmail, user_id, status}
+            try
+            {
+                int reqId = int.Parse(content[0]);
+                string email = content[1];
+                string user_id = content[2];
+                string status = content[3];
+
+                using (var context = new Database())
+                {
+                    if(context.Requests.Any(req => req.id == reqId))
+                    {
+                        var req = context.Requests.Single(req => req.id == reqId && req.user_id == user_id);
+                        var admin_id = context.Admin.Single(admn => admn.email == email).id;
+                        if (status == "Accept")
+                        {
+                            req.req_status = 1;
+                            req.admin_id = admin_id;
+                            context.Users.Single(usr => usr.id == user_id).user_type = true;
+                        }
+                        else if(status == "Reject")
+                        {
+                            req.req_status = -1;
+                            req.admin_id = admin_id;
+                        }
+                        context.SaveChanges();
+
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        /* Insert Modification on the system by guiders */
+        [HttpPost("Modification_")]
+        public bool InsertModify(string user_id, string[] content, string operation)
+        {
+            try
+            {
+                // Content will be string has length equals to 1
+                // when add place string = "name|location|description|placeType|CityName|Image"
+                // when clinets read it, this letter '|' will be the splitter to make an array
+                byte[] data = System.Text.Encoding.UTF8.GetBytes(content[0]);
+                using (var context = new Database())
+                {
+                    if(context.Users.Any(user => user.id == user_id))
+                    {
+                        var modfy = new Modification()
+                        {
+                            id = default(int),
+                            user_id = user_id,
+                            admin_id = "",
+                            file = data,
+                            operation = operation
+                        };
+                        context.Add(modfy);
+                        context.SaveChanges();
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
+        [HttpPost("UpdateGuiderModify_")]
+        public bool UpdateModify(string[] content)
+        {
+            try
+            {
+                int modiId = int.Parse(content[0]);
+                string email = content[1];
+                string user_id = content[2];
+                string status = content[3];
+
+                using (var context = new Database())
+                {
+                    if (context.Modifications.Any(modi => modi.id == modiId))
+                    {
+                        var modi = context.Modifications.Single(req => req.id == modiId && req.user_id == user_id);
+                        var admin_id = context.Admin.Single(admn => admn.email == email).id;
+
+                        modi.operation = status+"-"+modi.operation.Split('-')[1];
+                        modi.admin_id = admin_id;
+                        context.Users.Single(usr => usr.id == user_id).user_type = true;
+                        context.SaveChanges();
+
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception err)
+            {
                 return false;
             }
         }

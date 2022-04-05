@@ -211,12 +211,18 @@ namespace DalilakAPI.Controllers
                             places.Add(item);
                         }
                     }
+                    foreach (var item in places)
+                        item.city_id = context.Cities.Single(c => c.id == city_id).name;
                 }
                 return Enumerable.Range(0, i).Select(Index => new Place
                 {
                     id = places[Index].id,
-                    name = places[Index].name
-
+                    location = places[Index].location,
+                    description = places[Index].description,
+                    name = places[Index].name,
+                    place_type = places[Index].place_type,
+                    city_id = places[Index].city_id,
+                    
                 }).ToArray();
 
             }
@@ -375,6 +381,31 @@ namespace DalilakAPI.Controllers
             return dataset;
         }
 
+        [HttpGet("Summation_")]
+        public IEnumerable<int> GetTotal_ofEntities()
+        {
+            try
+            {
+                using (var context = new Database())
+                {
+                    return new int[]
+                    {
+                        context.Users.Count(user => user.user_type == false),
+                        context.Users.Count(user => user.user_type == true),
+                        context.Places.Count(),
+                        context.Cities.Count(),
+                        (context.Requests.Count(req => req.req_status == 0)// if 0, then its new request
+                        +
+                        context.Modifications.Count(modi => modi.operation.Contains("New")))
+                    };
+                }
+            }
+            catch (Exception err)
+            {
+                return new List<int>();
+            }
+        }
+
 
 
         /* Functions return data of relational tables in the database */
@@ -408,8 +439,80 @@ namespace DalilakAPI.Controllers
         }
 
         // Get all Requests between users and admins
+        [HttpGet("Requests_")]
+        public IEnumerable<Request> GetRequests()
+        {
+            try
+            {
+                List<Request> requests = new List<Request>();
+                using (var context = new Database())
+                {
+                    foreach (var req in context.Requests)
+                        requests.Add(req);
+
+                    foreach(var user in context.Users)
+                    {
+                        foreach (var req in requests)
+                        {
+                            if (user.id == req.user_id)
+                                req.user_id += ","+user.email;
+                        }
+                    }
+
+                    foreach(var adm in context.Admin)
+                    {
+                        foreach(var req in requests)
+                        {
+                            if(adm.id == req.admin_id)
+                                req.admin_id = adm.email;
+                        }
+                    }
+                }
+                return requests;
+            }
+            catch (Exception err)
+            {
+                return new List<Request>();
+            }
+        }
 
         // Get all Modification on the system between users and admins
+        [HttpGet("Modifications_")]
+        public IEnumerable<Modification> GetModifications()
+        {
+            try
+            {
+                List<Modification> modifications = new List<Modification>();
+                using (var context = new Database())
+                {
+                    foreach (var modi in context.Modifications)
+                        modifications.Add(modi);
+
+                    foreach (var user in context.Users)
+                    {
+                        foreach (var modi in modifications)
+                        {
+                            if (user.id == modi.user_id)
+                                modi.user_id += ","+user.email;
+                        }
+                    }
+
+                    foreach (var adm in context.Admin)
+                    {
+                        foreach (var modi in modifications)
+                        {
+                            if (adm.id == modi.admin_id)
+                                modi.admin_id = adm.email;
+                        }
+                    }
+                }
+                return modifications;
+            }
+            catch (Exception err)
+            {
+               return null;
+            }
+        }
 
 
 

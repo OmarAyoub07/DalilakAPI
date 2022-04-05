@@ -80,7 +80,7 @@ namespace DalilakAPI.Models
         [ForeignKey("FK_user_Ask")]
         public string user_id { get; set; }
         public byte[] file { get; set; }
-        public bool req_status { get; set; }
+        public int req_status { get; set; }
 
     }
 
