@@ -185,6 +185,44 @@ namespace DalilakAPI.Controllers
                 }
             }
         }
+
+        [HttpGet("ListOfSchdls_")]
+        public IEnumerable<Schedules> GetUserListofSchdls(string user_id)
+        {
+            try
+            {
+                List<string> docs = new List<string>();
+                var schedules = new List<Schedules>();
+                using (var context = new Database())
+                {
+                    int count = context.Schedules.Count(usr => usr.user_id == user_id);
+                    if (count != 0)
+                    {
+                        foreach (var schdl in context.Schedules)
+                        {
+                            if(schdl.user_id == user_id)
+                                docs.Add(schdl.Doc_id);
+                        }
+                        schedules = _noSqlDatabase.GetUserSchedules(docs);
+                        foreach(var schdl in schedules)
+                        {
+                            foreach(var day in schdl.days)
+                            {
+                                foreach (var hour in day.hours)
+                                    hour.place_id = context.Places.Single(plc => plc.id == hour.place_id).name;                        
+                            }
+                            schdl.city_id = context.Cities.Single(cty => cty.id == schdl.city_id).name;
+                        }
+                    }
+                }
+                return schedules;                   
+            }
+            catch (Exception err)
+            {
+                return Enumerable.Empty<Schedules>();
+            }
+        }
+        
         /* End of users functions */
 
 
@@ -271,7 +309,7 @@ namespace DalilakAPI.Controllers
                 return Enumerable.Range(0, 1).Select(Index => new Place
                 {
                     name = err.Message,
-                    description = "you must set a value for place or city..."
+                    description = "you must set a value for place or city... "
                 }).ToArray();
             }
         }

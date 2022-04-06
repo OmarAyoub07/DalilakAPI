@@ -304,6 +304,40 @@ namespace DalilakAPI.Controllers
             }
         }
 
+        [HttpPost("Schedule_")]
+        public bool InsertSchedule(string user_id, Schedules schedule)
+        {
+            try
+            {
+                string docID = Guid.NewGuid().ToString("D");
+                schedule.Id = docID;
+                bool isAdd = _noSqlDatabase.AddNewDocforSchdl(schedule);
+                if (isAdd)
+                {
+                    using (var context = new Database())
+                    {
+                        if (context.Users.Any(usr => usr.id == user_id) && isAdd)
+                        {
+                            var schl = new Schedule()
+                            {
+                                id = default(int),
+                                user_id = user_id,
+                                Doc_id = docID
+                            };
+                            context.Add(schl);
+                            context.SaveChanges();
+                        }
+                    }
+                }
+                return isAdd;
+            }
+            catch (Exception err)
+            {
+                Response.Redirect("http://api.dalilak.pro/System/Erro?error="+err.Message);
+                return false;
+            }
+        }
+
 
         /* Insert Image for City */
         [HttpPost("Ads_")]

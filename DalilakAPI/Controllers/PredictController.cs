@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.ML;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 
 namespace DalilakAPI.Controllers
 {
@@ -143,6 +145,114 @@ namespace DalilakAPI.Controllers
 
             return new int[] { totl_recom, totl_notRecom, totl_cantPredict };
         }
+
+        [HttpGet("GenerateSchedule_")]
+        public IEnumerable<Schedules> GenerateSchdl(string user_id, string cityID, string fromDate, string toDate, float crowdRate)
+        {
+            // Recommender Function to generate new plan for user in specific city
+            try
+            {
+                DateTime fromDateTime = DateTime.Parse(fromDate); // Date posted by user 
+                int toDateTime = DateTime.Parse(toDate).Month; // example from 1/1/2022 to 4/2/2022
+
+                List<Place> Recommended_places = new List<Place>(); // Store Recommended places for user
+                Schedules schedule = new Schedules(); // Store the final result (Trip Plan)
+
+                using (var context = new Database())
+                {
+                    if (context.Users.Any(user => user.id == user_id))
+                    {
+                        schedule.user_id = user_id; // assign user id
+                        schedule.city_id = cityID; // Assign City Id
+                        schedule.days = new List<TripDay>(); // Declare list for days
+
+                        /* Recommender loop */
+                        foreach(var place in context.Places.Where(plc => plc.city_id == cityID))
+                        {
+                            // Predict Recommended places for the user
+                            var recomSample = new DataSet.MatrixFactorization { user_id = user_id, place_id = place.id };
+                            var rate = MF_predictionEngin.Predict(recomSample).Score;
+
+                            if (rate > 0.65) // Is Recommended 
+                                Recommended_places.Add(place);
+                        }
+
+                        List<string> stored_places = new List<string>(); // List to store places added to the plan
+
+                        /* Predict visits rate based on posted percentage */
+                        for (int month = fromDateTime.Month; month <= toDateTime; month+=2) // Months loop 
+                        {
+                            for (int dayOfweek = 1; dayOfweek <= 7; dayOfweek++) // Days loop
+                            {
+                                string date = DayText(dayOfweek);
+                                date += MonthText(month); // convert date to form that machine learning can understand
+
+                                List<int> predicted_Times_Perday = new List<int>(); // List to store times added to the plan (for one day)
+                                                                                    // to avoid the repetitions (to avoid adding multi places on same time)
+
+                                /* loop recommended places */
+                                foreach (var place in Recommended_places)
+                                {
+                                    for (int time = 0; time < 24; time+=3) // Hours loop
+                                    {
+                                        /* Predict Visits Rate */
+                                        var visitSample = new DataSet.LinearRegression()
+                                        {
+                                            place_id = place.id,
+                                            date = date,
+                                            time = time
+                                        };
+                                        var predict = LR_predictionEngin.Predict(visitSample).visits_num; // predicted value
+
+                                        /* if statement - to make judgment (is it recommended or not ) */
+                                        // 1 - if the visits Rate less than predicted
+                                        //      * if the user want the most visits time or best time, he should post greater the (0.5)
+                                        // 2 - and if the system doesn't recommend this place before
+                                        //      * if the system recommend (Al-Hada), it shouldn't recommend (Al-Hada) again
+                                        // 3 - and if the system doesn't recommend this time before (for one day)
+                                        //      * if the system recommend for any place at (9:00 - sunday), it shouldn't recommend any place at (9:00 - sunday)
+                                        if (crowdRate <= predict && !predicted_Times_Perday.Any(t => t == time) && !stored_places.Any(p => p == place.id))
+                                        {
+                                            string date1 = fromDateTime.ToString("MM/dd/yyyy"); // get date of recommendation as string
+
+                                            /* add recommended place to the user plan */
+                                            if (!schedule.days.Any(d => d.date == date1)) // if the schedule dont contains of date equals to (date1)                                           
+                                                schedule.days.Add(new TripDay { date = date1, hours = new List<TripTime>() }); // adding date                                            
+                                            
+                                                var day = schedule.days.Single(d => d.date == date1); // Get
+                                                day.hours.Add(new TripTime { time = time.ToString(), place_id = place.id }); // add time
+                                            
+                                            stored_places.Add(place.id); // store place id as recommended place, and should not be recommended again
+                                            predicted_Times_Perday.Add(time); // store this time as recommended time for this day
+                                            break; // break loop, no need to continue while the place is recommended
+                                        }// if end
+                                    }// time loop end
+                                }// recommended places loop end
+                            } // days loop end
+                            fromDateTime = fromDateTime.AddMonths(2); // Inceremnt months
+                        } // months loop end
+                    }// if end
+
+                    // Make a copy of object without reference
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(schedule);
+                    Schedules user_schdl = Newtonsoft.Json.JsonConvert.DeserializeObject<Schedules>(json);
+
+                    /* Convert the schedule to form that user can read */
+                    user_schdl.city_id = context.Cities.Single(c => c.id == cityID).name; // Get City Name
+                    foreach (var day in user_schdl.days)
+                        foreach (var hour in day.hours)
+                        {
+                            hour.place_id = context.Places.Single(p => p.id == hour.place_id).name;
+                        }
+
+                    return new List<Schedules>() { user_schdl , schedule };
+                }
+            }
+            catch (Exception err)
+            {
+                return new List<Schedules>();
+            }
+}
 
         private void loadModels()
         {

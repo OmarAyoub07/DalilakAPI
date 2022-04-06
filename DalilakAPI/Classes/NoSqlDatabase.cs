@@ -41,29 +41,6 @@ namespace DalilakAPI.Classes
             }
         }
 
-        public void insertSchedule(string docId, string userId, string cityId, List<TripDay> daysLi)
-        {
-            session.Store(new Schedules
-            {
-                Id = docId,
-                city_id = cityId,
-                user_id = userId,
-                days = daysLi
-            });
-            session.SaveChanges();
-        }
-
-        public void insertStatistics(string docId, string placeId, List<VisitDay> daysLi)
-        {
-            session.Store(new Statistics
-            {
-                place_id = placeId,
-                Id = docId,
-                days = daysLi
-            });
-            session.SaveChanges();
-        }
-
 
         /* Functions to add data to documnets related to specific place */
 
@@ -166,18 +143,20 @@ namespace DalilakAPI.Classes
             return doc.images;
         }
 
-        public void insertHistory()
+        public void deleteDoc(string id)
         {
-
+            session.Delete(id);
+            session.SaveChanges();
         }
 
-        public List<Statistics> selectStatistics()
+
+        public History GetHistory(string docId)
         {
-            using (session)
-            {
-                return session.Query<Statistics>().ToList();
-            }
+            var doc = session.Load<History>(docId);
+            return doc;
         }
+
+        /* Creat Documnets */
         public string[] createNewDoc_forPlace(string placeId)
         {
             string[] doc = new string[2];
@@ -201,54 +180,6 @@ namespace DalilakAPI.Classes
             session.SaveChanges();
             return doc;
         }
-        public void deleteDoc(string id)
-        {
-            session.Delete(id);
-            session.SaveChanges();
-        }
-
-        public List<Comments> selectComments()
-        {
-            using (session)
-            {
-                return session.Query<Comments>().ToList();
-            }
-        }
-
-        public List<History> selectHistories()
-        {
-            using (session)
-            {
-                return session.Query<History>().ToList();
-            }
-        }
-
-        public List<Schedules> selectSchedules()
-        {
-            using (session)
-            {
-                return session.Query<Schedules>().ToList();
-            }
-        }
-
-        public History GetHistory(string docId)
-        {
-            var doc = session.Load<History>(docId);
-            return doc;
-        }
-        //16cd4400-3398-4480-a096-1b29f7dee3c4
-
-       
-        
-       public Statistics selectStatistics(string id)
-        {
-            using (session)
-            {
-                return session.Load<Statistics>(id);
-            }
-
-        }
-
 
         public string createNewDocforUser(string userId)
         {
@@ -259,10 +190,31 @@ namespace DalilakAPI.Classes
             return doc;
            
         }
+
+        public bool AddNewDocforSchdl(Schedules schedule)
+        {
+            try
+            {
+                session.Store(schedule);
+                session.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public List<Schedules> GetUserSchedules(List<string> DocsId)
+        {
+            List<Schedules> schedules = new List<Schedules>();
+            foreach(var doc in DocsId)
+            {
+                schedules.Add(session.Load<Schedules>(doc));
+            }
+            return schedules;
+        }
         
 
     }
-
-
-   
 }
