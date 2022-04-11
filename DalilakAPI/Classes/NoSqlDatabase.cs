@@ -10,21 +10,22 @@ namespace DalilakAPI.Classes
 {
     public class NoSqlDatabase
     {
-        private X509Certificate2 clientCertificate;
-        private IDocumentSession session;
-        private string database;
-        private string[] serverUrls;
+        /* Variables to Initialize Connection  */
+        private X509Certificate2 clientCertificate; // Client Key
+        private IDocumentSession session; // to access files (add , delete , update) - need to use this 'session'
+        private string database; // database name
+        private string[] serverUrls; // url for each Node within distributed System
 
         public NoSqlDatabase()
         {
             clientCertificate = new X509Certificate2(@"free.dalilak.client.certificate/free.dalilak.client.certificate.pfx",
                 string.Empty,
-                X509KeyStorageFlags.MachineKeySet);
+                X509KeyStorageFlags.MachineKeySet); // RavenDB Verification 
 
             database = "Dalilak_DB";
-            serverUrls = new[] { "https://a.free.dalilak.ravendb.cloud" };
+            serverUrls = new[] { "https://a.free.dalilak.ravendb.cloud" }; // All Nodes of RavenDB - in our case we only have one Node
 
-            establishSession();
+            establishSession(); // Initialize Connection
         }
 
         private void establishSession()
@@ -35,14 +36,14 @@ namespace DalilakAPI.Classes
                 Database = database,
                 Urls = serverUrls
 
-            }.Initialize();
+            }.Initialize(); // Connection properties stored at 'session'
             {
                 session = store.OpenSession();
             }
         }
 
 
-        /* Functions to add data to documnets related to specific place */
+        /* Functions to add data */
 
         // - Add Comment to documnet
         public void AddComment(string docID, string userID, string message)
@@ -93,14 +94,32 @@ namespace DalilakAPI.Classes
 
             session.SaveChanges();
         }
+        
+        // - Add Image to document
+        public void AddImage(string docID, string img)
+        {
+            // Load the Json Document form RavenDB
+            var doc = session.Load<Comments>(docID);
 
-        // - Get DataSet
+            doc.images.Add(img);
+
+            session.SaveChanges();
+
+        }
+        /* End */
+
+
+        /* Functions to Get Data */
+
+        // - Get LinearRegression DataSet
         public List<DataSet.LinearRegression> Get_LR_DataSet()
         {
             var dataset = session.Query<DataSet.LinearRegression>("LinearRegression_DataSet").ToList();
 
             return dataset;
         }
+
+        // - Get MatrixFactorization DataSet
         public List<DataSet.MatrixFactorization> Get_MF_DataSet()
         {
             var dataset = session.Query<DataSet.MatrixFactorization>("MatrixFactorization_DataSet").ToList();
@@ -114,18 +133,6 @@ namespace DalilakAPI.Classes
             var doc = session.Load<Comments>(docID);
 
             return doc.reviewers;
-        }
-
-        // - Add Image to document
-        public void AddImage(string docID, string img)
-        {
-            // Load the Json Document form RavenDB
-            var doc = session.Load<Comments>(docID);
-
-            doc.images.Add(img);
-
-            session.SaveChanges();
-            
         }
 
         // - Get One random Image
@@ -143,18 +150,25 @@ namespace DalilakAPI.Classes
             return doc.images;
         }
 
-        public void deleteDoc(string id)
+        // - Get All Schedules for one user
+        public List<Schedules> GetUserSchedules(List<string> DocsId)
         {
-            session.Delete(id);
-            session.SaveChanges();
+            List<Schedules> schedules = new List<Schedules>();
+            foreach (var doc in DocsId)
+            {
+                schedules.Add(session.Load<Schedules>(doc));
+            }
+            return schedules;
         }
 
-
+        // - Get History record
         public History GetHistory(string docId)
         {
             var doc = session.Load<History>(docId);
             return doc;
         }
+        /* End */
+
 
         /* Creat Documnets */
         public string[] createNewDoc_forPlace(string placeId)
@@ -204,17 +218,17 @@ namespace DalilakAPI.Classes
                 return false;
             }
         }
+        /* End */
+  
 
-        public List<Schedules> GetUserSchedules(List<string> DocsId)
+        /* Delete Function */
+        public void deleteDoc(string id)
         {
-            List<Schedules> schedules = new List<Schedules>();
-            foreach(var doc in DocsId)
-            {
-                schedules.Add(session.Load<Schedules>(doc));
-            }
-            return schedules;
+            session.Delete(id);
+            session.SaveChanges();
         }
-        
+
+        /* End */
 
     }
 }

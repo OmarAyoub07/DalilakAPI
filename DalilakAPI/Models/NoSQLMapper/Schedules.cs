@@ -9,7 +9,7 @@ namespace DalilakAPI.Models
         public string city_id { get; set; }
         public List<TripDay> days { get; set; }
 
-        // json file uniqe id - to reach, update, delete the file
+        // json file uniqe id - to reach, update or delete the file
         public string Id { get; set; }
     }
 

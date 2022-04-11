@@ -211,7 +211,7 @@ namespace DalilakAPI.Controllers
                                         //      * if the system recommend (Al-Hada), it shouldn't recommend (Al-Hada) again
                                         // 3 - and if the system doesn't recommend this time before (for one day)
                                         //      * if the system recommend for any place at (9:00 - sunday), it shouldn't recommend any place at (9:00 - sunday)
-                                        if (crowdRate <= predict && !predicted_Times_Perday.Any(t => t == time) && !stored_places.Any(p => p == place.id))
+                                        if (crowdRate <= predict & (!predicted_Times_Perday.Any(t => t == time)) & (!stored_places.Any(p => p == place.id)))
                                         {
                                             string date1 = fromDateTime.ToString("MM/dd/yyyy"); // get date of recommendation as string
 
@@ -228,6 +228,7 @@ namespace DalilakAPI.Controllers
                                         }// if end
                                     }// time loop end
                                 }// recommended places loop end
+                                fromDateTime = fromDateTime.AddDays(3);
                             } // days loop end
                             fromDateTime = fromDateTime.AddMonths(2); // Inceremnt months
                         } // months loop end

@@ -14,7 +14,6 @@ namespace DalilakAPI.Models
         public string date { get; set; }
         public List<VisitTime> hours { get; set; }
     }
-
     public class VisitTime
     {
         public string time { get; set; }

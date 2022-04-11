@@ -217,6 +217,7 @@ namespace DalilakAPI.Controllers
                         phone_num = "+966"+phone,
                         id = userID,
                         record_doc = Jsondoc,
+                        information = "",
                         image = System.IO.File.ReadAllBytes("Assets/Images/traveler.png")
                 };
                     context.Add(user);
